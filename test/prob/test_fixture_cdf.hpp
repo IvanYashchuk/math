@@ -1,7 +1,7 @@
 #ifndef TEST_PROB_TEST_FIXTURE_CDF_HPP
 #define TEST_PROB_TEST_FIXTURE_CDF_HPP
 
-#include <stan/math/rev/mat.hpp>
+#include <stan/math/rev.hpp>
 #include <test/prob/utility.hpp>
 #include <type_traits>
 
@@ -59,7 +59,7 @@ class AgradCdfTest {
     cdf_function(const T_y& y, const T_loc& mu, const T_scale& sigma,
     const T3&, const T4&, const T5&, const T6&, const T7&, const T8&, const T9&)
     { using stan::math::erf; return (0.5 + 0.5 * erf((y - mu) / (sigma *
-    SQRT_2)));
+    SQRT_TWO)));
     }
   */
 };
@@ -689,7 +689,6 @@ class AgradCdfTestFixture : public ::testing::Test {
 
   void test_lower_bound() {
     using stan::math::value_of;
-    using stan::math::value_of;
     const size_t N_REPEAT = 3;
     vector<double> expected_cdf;
     vector<vector<double> > parameters;
@@ -726,7 +725,6 @@ class AgradCdfTestFixture : public ::testing::Test {
   }
 
   void test_upper_bound() {
-    using stan::math::value_of;
     using stan::math::value_of;
     const size_t N_REPEAT = 3;
     vector<double> expected_cdf;

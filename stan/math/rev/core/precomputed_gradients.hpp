@@ -1,7 +1,7 @@
 #ifndef STAN_MATH_REV_CORE_PRECOMPUTED_GRADIENTS_HPP
 #define STAN_MATH_REV_CORE_PRECOMPUTED_GRADIENTS_HPP
 
-#include <stan/math/prim/scal/err/check_consistent_sizes.hpp>
+#include <stan/math/prim/err/check_consistent_sizes.hpp>
 #include <stan/math/rev/core/vari.hpp>
 #include <stan/math/rev/core/var.hpp>
 #include <algorithm>
@@ -58,8 +58,9 @@ class precomputed_gradients_vari : public vari {
             vars.size())) {
     check_consistent_sizes("precomputed_gradients_vari", "vars", vars,
                            "gradients", gradients);
-    for (size_t i = 0; i < vars.size(); ++i)
+    for (size_t i = 0; i < vars.size(); ++i) {
       varis_[i] = vars[i].vi_;
+    }
     std::copy(gradients.begin(), gradients.end(), gradients_);
   }
 
@@ -68,8 +69,9 @@ class precomputed_gradients_vari : public vari {
    * prestored operands and gradient.
    */
   void chain() {
-    for (size_t i = 0; i < size_; ++i)
+    for (size_t i = 0; i < size_; ++i) {
       varis_[i]->adj_ += adj_ * gradients_[i];
+    }
   }
 };
 
@@ -82,13 +84,14 @@ class precomputed_gradients_vari : public vari {
  * @param[in] operands operands.
  * @param[in] gradients vector of partial derivatives of result with
  * respect to operands.
- * @return An auto-diff variable that uses the precomputed
- *   gradients provided.
+ * @return An autodiff variable that uses the precomputed
+ * gradients provided.
  */
 inline var precomputed_gradients(double value, const std::vector<var>& operands,
                                  const std::vector<double>& gradients) {
   return var(new precomputed_gradients_vari(value, operands, gradients));
 }
+
 }  // namespace math
 }  // namespace stan
 #endif

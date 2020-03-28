@@ -1,18 +1,19 @@
 #ifndef STAN_MATH_OPENCL_COPY_TRIANGULAR_HPP
 #define STAN_MATH_OPENCL_COPY_TRIANGULAR_HPP
 #ifdef STAN_OPENCL
+
 #include <stan/math/opencl/matrix_cl_view.hpp>
 #include <stan/math/opencl/copy.hpp>
 #include <stan/math/opencl/matrix_cl.hpp>
 #include <stan/math/opencl/kernels/copy_triangular.hpp>
-#include <stan/math/opencl/err/check_opencl.hpp>
+#include <stan/math/opencl/err.hpp>
 #include <stan/math/prim/meta.hpp>
-#include <CL/cl.hpp>
+#include <CL/cl2.hpp>
 
 namespace stan {
 namespace math {
 
-/**
+/** \ingroup opencl
  * Copies the lower or upper
  * triangular of the source matrix to
  * the destination matrix.
@@ -28,7 +29,7 @@ namespace math {
  *
  */
 template <matrix_cl_view matrix_view = matrix_cl_view::Entire, typename T,
-          typename = enable_if_arithmetic<T>>
+          typename = require_arithmetic_t<T>>
 inline matrix_cl<T> copy_triangular(const matrix_cl<T>& src) {
   if (src.size() == 0 || src.size() == 1) {
     matrix_cl<T> dst(src);

@@ -1,5 +1,5 @@
 // Arguments: Doubles, Doubles, Doubles
-#include <stan/math/prim/scal.hpp>
+#include <stan/math/prim.hpp>
 
 using stan::math::var;
 using std::numeric_limits;
@@ -39,6 +39,9 @@ class AgradCcdfLogBetaProportion : public AgradCcdfLogTest {
 
     index.push_back(1U);
     value.push_back(0.0);
+
+    index.push_back(1U);
+    value.push_back(1.0);
 
     index.push_back(1U);
     value.push_back(numeric_limits<double>::infinity());

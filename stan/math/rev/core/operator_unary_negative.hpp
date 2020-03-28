@@ -3,8 +3,8 @@
 
 #include <stan/math/rev/core/var.hpp>
 #include <stan/math/rev/core/v_vari.hpp>
-#include <stan/math/prim/scal/fun/is_nan.hpp>
-#include <limits>
+#include <stan/math/prim/fun/constants.hpp>
+#include <stan/math/prim/fun/is_nan.hpp>
 
 namespace stan {
 namespace math {
@@ -14,10 +14,11 @@ class neg_vari : public op_v_vari {
  public:
   explicit neg_vari(vari* avi) : op_v_vari(-(avi->val_), avi) {}
   void chain() {
-    if (unlikely(is_nan(avi_->val_)))
-      avi_->adj_ = std::numeric_limits<double>::quiet_NaN();
-    else
+    if (unlikely(is_nan(avi_->val_))) {
+      avi_->adj_ = NOT_A_NUMBER;
+    } else {
       avi_->adj_ -= adj_;
+    }
   }
 };
 }  // namespace internal

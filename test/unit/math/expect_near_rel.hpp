@@ -30,18 +30,15 @@ namespace internal {
  * @param x2 second argument
  * @param tol relative tolerance
  */
-template <typename T1, typename T2>
+template <typename T1, typename T2, require_all_stan_scalar_t<T1, T2>...>
 void expect_near_rel_finite(const std::string& msg, const T1& x1, const T2& x2,
                             double tol = 1e-8) {
   using stan::math::fabs;
-  // if both zero, can just return
-  // if only one is zero, test that the non-zero one is close to zero,
-  // because general case reduces to 2 if x1 = 0 and x2 != 0 and vice-versa
-  if (x1 == 0 && x2 == 0)
-    return;
-  if (x1 == 0 || x2 == 0) {
+  // if either arg near zero, must use absolute tolerance as rel tol -> 2
+  if (fabs(x1) < tol || fabs(x2) < tol) {
     EXPECT_NEAR(x1, x2, tol) << "expect_near_rel_finite(" << x1 << ", " << x2
-                             << ", tolerance = " << tol << ")"
+                             << ", absolute tolerance = " << tol << ")"
+                             << "; absolute diff = " << fabs(x1 - x2)
                              << "    in: " << msg << std::endl;
     return;
   }
@@ -49,19 +46,21 @@ void expect_near_rel_finite(const std::string& msg, const T1& x1, const T2& x2,
   auto relative_diff = (x1 - x2) / avg;
   EXPECT_NEAR(0, relative_diff, tol)
       << "expect_near_rel_finite(" << x1 << ", " << x2
-      << ", tolerance = " << tol << ")"
+      << ", relative tolerance = " << tol << ")"
       << "; relative diff = " << relative_diff << std::endl
       << "    in: " << msg << std::endl;
 }
 
-template <typename T1, typename T2, int R, int C>
-void expect_near_rel_finite(const std::string& msg,
-                            const Eigen::Matrix<T1, R, C>& x1,
-                            const Eigen::Matrix<T2, R, C>& x2) {
+template <typename EigMat1, typename EigMat2,
+          require_all_eigen_t<EigMat1, EigMat2>...>
+void expect_near_rel_finite(const std::string& msg, const EigMat1& x1,
+                            const EigMat2& x2) {
   EXPECT_EQ(x1.rows(), x2.rows());
   EXPECT_EQ(x1.cols(), x2.cols());
+  auto x1_eval = x1.eval();
+  auto x2_eval = x2.eval();
   for (int i = 0; i < x1.size(); ++i)
-    expect_near_rel_finite(msg, x1(i), x2(i));
+    expect_near_rel_finite(msg, x1_eval(i), x2_eval(i));
 }
 
 template <typename T1, typename T2>
@@ -88,7 +87,7 @@ void expect_near_rel_finite(const std::string& msg, const std::vector<T1>& x1,
  * @param x2 second argument to test
  * @param tol relative tolerance
  */
-template <typename T1, typename T2>
+template <typename T1, typename T2, require_all_stan_scalar_t<T1, T2>...>
 void expect_near_rel(const std::string& msg, const T1& x1, const T2& x2,
                      double tol = 1e-8) {
   if (stan::math::is_nan(x1) || stan::math::is_nan(x2))
@@ -118,9 +117,10 @@ void expect_near_rel(const std::string& msg, const T1& x1, const T2& x2,
  * @param x2 second matrix to test
  * @param tol relative tolerance
  */
-template <typename T1, typename T2, int R, int C>
-void expect_near_rel(const std::string& msg, const Eigen::Matrix<T1, R, C>& x1,
-                     const Eigen::Matrix<T2, R, C>& x2, double tol = 1e-8) {
+template <typename EigMat1, typename EigMat2,
+          require_all_eigen_t<EigMat1, EigMat2>...>
+void expect_near_rel(const std::string& msg, EigMat1&& x1, EigMat2&& x2,
+                     double tol = 1e-8) {
   EXPECT_EQ(x1.rows(), x2.rows()) << "expect_near_rel (Eigen::Matrix)"
                                   << " rows must be same size."
                                   << " x1.rows() = " << x1.rows()
@@ -133,8 +133,10 @@ void expect_near_rel(const std::string& msg, const Eigen::Matrix<T1, R, C>& x1,
       << std::endl
       << msg << std::endl;
   std::string msg2 = "expect_near_rel; require items x1(i) = x2(i): " + msg;
+  auto x1_eval = x1.eval();
+  auto x2_eval = x2.eval();
   for (int i = 0; i < x1.size(); ++i)
-    expect_near_rel(msg2, x1(i), x2(i), tol);
+    expect_near_rel(msg2, x1_eval(i), x2_eval(i), tol);
 }
 
 template <typename T1, typename T2>

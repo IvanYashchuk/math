@@ -1,5 +1,5 @@
 // Arguments: Doubles, Doubles
-#include <stan/math/prim/scal.hpp>
+#include <stan/math/prim.hpp>
 
 using stan::math::var;
 using std::numeric_limits;
@@ -57,7 +57,6 @@ class AgradCdfChiSquare : public AgradCdfTest {
   typename stan::return_type<T_y, T_dof, T2>::type cdf_function(
       const T_y& y, const T_dof& nu, const T2&, const T3&, const T4&,
       const T5&) {
-    using stan::math::gamma_p;
     using stan::math::gamma_p;
 
     return gamma_p(nu * 0.5, y * 0.5);
