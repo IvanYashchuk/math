@@ -8,10 +8,12 @@ def runTests(String testPath) {
     finally { junit 'test/**/*.xml' }
 }
 
-def runTestsWin(String testPath) {
+def runTestsWin(String testPath, boolean buildLibs = true) {
     withEnv(['PATH+TBB=./lib/tbb']) {
        bat "echo $PATH"
-       bat "mingw32-make.exe -f make/standalone math-libs"
+       if (buildLibs){
+           bat "mingw32-make.exe -f make/standalone math-libs"
+       }
        bat "runTests.py -j${env.PARALLEL} ${testPath} --make-only"
        try { bat "runTests.py -j${env.PARALLEL} ${testPath}" }
        finally { junit 'test/**/*.xml' }
@@ -22,6 +24,8 @@ def deleteDirWin() {
     bat "attrib -r -s /s /d"
     deleteDir()
 }
+
+def skipRemainingStages = false
 
 def utils = new org.stan.Utils()
 
@@ -143,47 +147,53 @@ pipeline {
                 }
             }
         }
-        stage('Headers checks') {
-            parallel {
-              stage('Headers check') {
-                agent any
-                steps {
-                    deleteDir()
-                    unstash 'MathSetup'
-                    sh "echo CXX=${env.CXX} -Werror > make/local"
-                    sh "make -j${env.PARALLEL} test-headers"
+        stage('Verify changes') {
+            agent { label 'linux' }
+            steps {
+                script {         
+
+                    retry(3) { checkout scm }
+                    sh 'git clean -xffd'
+
+                    def paths = ['stan', 'make', 'lib', 'test', 'runTests.py', 'runChecks.py', 'makefile', 'Jenkinsfile', '.clang-format'].join(" ")
+                    skipRemainingStages = utils.verifyChanges(paths)
                 }
-                post { always { deleteDir() } }
-              }
-              stage('Headers check with OpenCL') {
-                agent { label "gpu" }
-                steps {
-                    deleteDir()
-                    unstash 'MathSetup'
-                    sh "echo CXX=${env.CXX} -Werror > make/local"
-                    sh "echo STAN_OPENCL=true>> make/local"
-                    sh "echo OPENCL_PLATFORM_ID=0>> make/local"
-                    sh "echo OPENCL_DEVICE_ID=${OPENCL_DEVICE_ID}>> make/local"
-                    sh "make -j${env.PARALLEL} test-headers"
-                }
-                post { always { deleteDir() } }
-              }
-           }
+            }
         }
-        stage('Always-run tests part 1') {
-            parallel {
-                stage('Linux Unit with MPI') {
-                    agent { label 'linux && mpi' }
-                    steps {
-                        deleteDir()
-                        unstash 'MathSetup'
-                        sh "echo CXX=${MPICXX} >> make/local"
-                        sh "echo CXX_TYPE=gcc >> make/local"                        
-                        sh "echo STAN_MPI=true >> make/local"
-                        runTests("test/unit")
-                    }
-                    post { always { retry(3) { deleteDir() } } }
+        stage('Headers check') {
+            when {
+                expression {
+                    !skipRemainingStages
                 }
+            }
+            agent any
+            steps {
+                deleteDir()
+                unstash 'MathSetup'
+                sh "echo CXX=${env.CXX} -Werror > make/local"
+                sh "make -j${env.PARALLEL} test-headers"
+            }
+            post { always { deleteDir() } }
+        }
+        stage('Linux Unit with MPI') {
+            agent { label 'linux && mpi' }
+            steps {
+                deleteDir()
+                unstash 'MathSetup'
+                sh "echo CXX=${MPICXX} >> make/local"
+                sh "echo CXX_TYPE=gcc >> make/local"                        
+                sh "echo STAN_MPI=true >> make/local"
+                runTests("test/unit")
+            }
+            post { always { retry(3) { deleteDir() } } }
+        }
+        stage('Always-run tests') {
+            when {
+                expression {
+                    !skipRemainingStages
+                }
+            }
+            parallel {
                 stage('Full unit with GPU') {
                     agent { label "gpu" }
                     steps {
@@ -193,14 +203,11 @@ pipeline {
                         sh "echo STAN_OPENCL=true>> make/local"
                         sh "echo OPENCL_PLATFORM_ID=0>> make/local"
                         sh "echo OPENCL_DEVICE_ID=${OPENCL_DEVICE_ID}>> make/local"
+                        sh "make -j${env.PARALLEL} test-headers"
                         runTests("test/unit")
                     }
                     post { always { retry(3) { deleteDir() } } }
                 }
-            }
-        }
-        stage('Always-run tests part 2') {
-            parallel {
                 stage('Distribution tests') {
                     agent { label "distribution-tests" }
                     steps {
@@ -246,8 +253,9 @@ pipeline {
                     steps {
                         deleteDirWin()
                         unstash 'MathSetup'
+                        bat "mingw32-make.exe -f make/standalone math-libs"
                         bat "mingw32-make -j${env.PARALLEL} test-headers"
-                        runTestsWin("test/unit")
+                        runTestsWin("test/unit", false)
                     }
                 }
                 stage('Windows Threading') {
@@ -264,7 +272,17 @@ pipeline {
             }
         }
         stage('Additional merge tests') {
-            when { anyOf { branch 'develop'; branch 'master' } }
+            when { 
+                allOf {
+                    anyOf {
+                        branch 'develop'
+                        branch 'master'
+                    }
+                    expression {
+                        !skipRemainingStages
+                    }
+                }
+            }
             parallel {
                 stage('Linux Unit with Threading') {
                     agent { label 'linux' }
@@ -291,7 +309,16 @@ pipeline {
             }
         }
         stage('Upstream tests') {
-            when { expression { env.BRANCH_NAME ==~ /PR-\d+/ } }
+            when { 
+                allOf {
+                    expression { 
+                        env.BRANCH_NAME ==~ /PR-\d+/ 
+                    }
+                    expression { 
+                        !skipRemainingStages
+                    }
+                }
+            }
             steps {
                 build(job: "Stan/${stan_pr()}",
                         parameters: [string(name: 'math_pr', value: env.BRANCH_NAME),

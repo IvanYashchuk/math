@@ -6,7 +6,6 @@
 #include <stan/math/prim/fun/Eigen.hpp>
 #include <stan/math/prim/fun/is_nan.hpp>
 #include <stan/math/prim/fun/log1p.hpp>
-#include <stan/math/prim/vectorize/apply_scalar_unary.hpp>
 #include <cmath>
 
 namespace stan {
@@ -20,8 +19,8 @@ namespace math {
  * \f]
  *
  * This version is more stable for arguments near zero than
- * the direct definition.  If <code>log1p(x)</code> is defined to
- * be negative infinity.
+ * the direct definition.  If <code>x == -1</code>, <code>log1p(x)</code>
+ * is defined to be negative infinity.
  *
  * @param[in] x Argument.
  * @return Natural log of one plus the argument.
@@ -46,12 +45,8 @@ inline double log1p(double x) {
  * @throw std::domain_error If argument is less than -1.
  */
 inline double log1p(int x) {
-  if (is_nan(x)) {
-    return x;
-  } else {
-    check_greater_or_equal("log1p", "x", x, -1);
-    return std::log1p(x);
-  }
+  check_greater_or_equal("log1p", "x", x, -1);
+  return std::log1p(x);
 }
 
 /**

@@ -235,21 +235,42 @@ TEST(requires_prim_arr, container_type_test) {
 
 template <template <class> class ContainerCheck,
           template <class> class TypeCheck, class Check, typename = void>
-struct require_container_tester : std::false_type {};
+struct require_container_vt_tester : std::false_type {};
 
 template <template <class> class ContainerCheck,
           template <class> class TypeCheck, class Check>
-struct require_container_tester<
+struct require_container_vt_tester<
     ContainerCheck, TypeCheck, Check,
     stan::require_container_vt<ContainerCheck, TypeCheck, Check>>
     : std::true_type {};
 
-TEST(requires_prim_arr, generic_container_type_test) {
+TEST(requires_prim_arr, generic_container_vt_test) {
   EXPECT_FALSE(
-      (require_container_tester<stan::is_vector, std::is_floating_point,
-                                double>::value));
-  EXPECT_TRUE((require_container_tester<stan::is_vector, std::is_floating_point,
-                                        std::vector<double>>::value));
+      (require_container_vt_tester<stan::is_vector, std::is_floating_point,
+                                   double>::value));
+  EXPECT_TRUE(
+      (require_container_vt_tester<stan::is_vector, std::is_floating_point,
+                                   std::vector<double>>::value));
+}
+
+template <template <class> class ContainerCheck,
+          template <class> class TypeCheck, class Check, typename = void>
+struct require_container_st_tester : std::false_type {};
+
+template <template <class> class ContainerCheck,
+          template <class> class TypeCheck, class Check>
+struct require_container_st_tester<
+    ContainerCheck, TypeCheck, Check,
+    stan::require_container_st<ContainerCheck, TypeCheck, Check>>
+    : std::true_type {};
+
+TEST(requires_prim_arr, generic_container_st_test) {
+  EXPECT_FALSE(
+      (require_container_st_tester<stan::is_vector, std::is_integral,
+                                   std::vector<std::vector<double>>>::value));
+  EXPECT_TRUE(
+      (require_container_st_tester<stan::is_vector, std::is_floating_point,
+                                   std::vector<std::vector<double>>>::value));
 }
 
 TEST(requires_prim_arr, std_vector_t_test) {
@@ -1031,4 +1052,29 @@ TEST(requires_prim_mat, any_not_std_vector_eigen_st_test) {
   require_container_checker<
       stan::require_any_not_std_vector_st,
       std_vector_eigen_x>::any_not<std::is_floating_point>();
+}
+
+TEST(requires_prim_mat, eigen_row_and_col) {
+  using Eigen::RowVectorXd;
+  using Eigen::VectorXd;
+  using stan::require_eigen_row_and_col_t;
+  using stan::require_not_eigen_row_and_col_t;
+  using stan::test::require_variadic_checker;
+  EXPECT_TRUE((require_variadic_checker<require_eigen_row_and_col_t,
+                                        RowVectorXd, VectorXd>::value));
+  EXPECT_FALSE((require_variadic_checker<require_not_eigen_row_and_col_t,
+                                         RowVectorXd, VectorXd>::value));
+
+  EXPECT_FALSE((require_variadic_checker<require_eigen_row_and_col_t, VectorXd,
+                                         VectorXd>::value));
+  EXPECT_TRUE((require_variadic_checker<require_not_eigen_row_and_col_t,
+                                        VectorXd, VectorXd>::value));
+  EXPECT_FALSE((require_variadic_checker<require_eigen_row_and_col_t,
+                                         RowVectorXd, RowVectorXd>::value));
+  EXPECT_TRUE((require_variadic_checker<require_not_eigen_row_and_col_t,
+                                        RowVectorXd, RowVectorXd>::value));
+  EXPECT_FALSE((require_variadic_checker<require_eigen_row_and_col_t, VectorXd,
+                                         RowVectorXd>::value));
+  EXPECT_TRUE((require_variadic_checker<require_not_eigen_row_and_col_t,
+                                        VectorXd, RowVectorXd>::value));
 }

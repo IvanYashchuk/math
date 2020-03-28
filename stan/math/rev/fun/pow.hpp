@@ -1,16 +1,27 @@
 #ifndef STAN_MATH_REV_FUN_POW_HPP
 #define STAN_MATH_REV_FUN_POW_HPP
 
+#include <stan/math/prim/core.hpp>
+#include <stan/math/prim/meta.hpp>
+#include <stan/math/prim/fun/constants.hpp>
+#include <stan/math/prim/fun/copysign.hpp>
+#include <stan/math/prim/fun/is_any_nan.hpp>
+#include <stan/math/prim/fun/isnan.hpp>
+#include <stan/math/prim/fun/is_nan.hpp>
+#include <stan/math/prim/fun/pow.hpp>
 #include <stan/math/rev/meta.hpp>
 #include <stan/math/rev/core.hpp>
 #include <stan/math/rev/fun/inv.hpp>
 #include <stan/math/rev/fun/inv_sqrt.hpp>
 #include <stan/math/rev/fun/inv_square.hpp>
+#include <stan/math/rev/fun/is_nan.hpp>
+#include <stan/math/rev/fun/log.hpp>
 #include <stan/math/rev/fun/sqrt.hpp>
 #include <stan/math/rev/fun/square.hpp>
-#include <stan/math/prim/fun/constants.hpp>
-#include <stan/math/prim/fun/is_any_nan.hpp>
+#include <stan/math/rev/fun/value_of_rec.hpp>
 #include <cmath>
+#include <complex>
+#include <type_traits>
 
 namespace stan {
 namespace math {
@@ -106,7 +117,7 @@ class pow_dv_vari : public op_dv_vari {
  * @return Base raised to the exponent.
  */
 inline var pow(const var& base, const var& exponent) {
-  return var(new internal::pow_vv_vari(base.vi_, exponent.vi_));
+  return {new internal::pow_vv_vari(base.vi_, exponent.vi_)};
 }
 
 /**
@@ -117,11 +128,16 @@ inline var pow(const var& base, const var& exponent) {
  *
  * \f$\frac{d}{dx} \mbox{pow}(x, c) = c x^{c-1}\f$.
  *
+ * The template parameters are coded as they are so that arithmetic
+ * types will not be promoted into the `var` slots.
+ *
+ * @tparam T arithmetic type
  * @param base Base variable.
  * @param exponent Exponent scalar.
  * @return Base raised to the exponent.
  */
-inline var pow(const var& base, double exponent) {
+template <typename T, typename = require_arithmetic_t<T>>
+inline var pow(const var& base, T exponent) {
   if (exponent == 0.5) {
     return sqrt(base);
   }
@@ -140,7 +156,7 @@ inline var pow(const var& base, double exponent) {
   if (exponent == -0.5) {
     return inv_sqrt(base);
   }
-  return var(new internal::pow_vd_vari(base.vi_, exponent));
+  return {new internal::pow_vd_vari(base.vi_, exponent)};
 }
 
 /**
@@ -151,12 +167,158 @@ inline var pow(const var& base, double exponent) {
  *
  * \f$\frac{d}{d y} \mbox{pow}(c, y) = c^y \log c \f$.
  *
+ * The template parameters are coded as they are so that arithmetic
+ * types will not be promoted into the `var` slots.
+ *
+ * @tparam T arithmetic type
+ *
  * @param base Base scalar.
  * @param exponent Exponent variable.
  * @return Base raised to the exponent.
  */
-inline var pow(double base, const var& exponent) {
-  return var(new internal::pow_dv_vari(base, exponent.vi_));
+template <typename T, typename = require_arithmetic_t<T>>
+inline var pow(T base, const var& exponent) {
+  return {new internal::pow_dv_vari(base, exponent.vi_)};
+}
+
+// must uniquely match all pairs of { complex<var>, complex<T>, var, T }
+// with at least one var and at least one complex, where T is arithmetic:
+// 1) complex<var>, complex<var>
+// 2) complex<var>, complex<T>
+// 3) complex<var>, var
+// 4) complex<var>, T
+// 5) complex<T>, complex<var>
+// 6) complex<T>, var
+// 7) var, complex<var>
+// 8) var, complex<T>
+// 9) T, complex<var>
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+inline std::complex<var> pow(const std::complex<var>& x,
+                             const std::complex<var>& y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @tparam T arithmetic type
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+template <typename T, typename = require_arithmetic_t<T>>
+inline std::complex<var> pow(const std::complex<var>& x,
+                             const std::complex<T> y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+inline std::complex<var> pow(const std::complex<var>& x, const var& y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @tparam T arithmetic type
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+template <typename T, typename = require_arithmetic_t<T>>
+inline std::complex<var> pow(const std::complex<var>& x, T y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @tparam T arithmetic type
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+template <typename T, typename = require_arithmetic_t<T>>
+inline std::complex<var> pow(std::complex<T> x, const std::complex<var>& y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @tparam T arithmetic type
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+template <typename T, typename = require_arithmetic_t<T>>
+inline std::complex<var> pow(std::complex<T> x, const var& y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+inline std::complex<var> pow(const var& x, const std::complex<var>& y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @tparam T arithmetic type
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+template <typename T, typename = require_arithmetic_t<T>>
+inline std::complex<var> pow(const var& x, std::complex<T> y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * @tparam T arithmetic type
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+template <typename T, typename = require_arithmetic_t<T>>
+inline std::complex<var> pow(T x, const std::complex<var>& y) {
+  return internal::complex_pow(x, y);
+}
+
+/**
+ * Return the first argument raised to the power of the second argument.
+ *
+ * Note: this overload is required because gcc still provides the
+ * C++99 template function `pow(complex<T>, int)`, which introduces
+ * an ambiguity.
+ *
+ * @param x first argument
+ * @param y second argument
+ * @return first argument to the power of the second argument
+ */
+inline std::complex<var> pow(const std::complex<var>& x, int y) {
+  return internal::complex_pow(x, y);
 }
 
 }  // namespace math

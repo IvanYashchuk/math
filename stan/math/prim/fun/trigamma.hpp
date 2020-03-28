@@ -3,9 +3,11 @@
 
 #include <stan/math/prim/meta.hpp>
 #include <stan/math/prim/fun/constants.hpp>
-#include <stan/math/prim/fun/square.hpp>
+#include <stan/math/prim/fun/floor.hpp>
+#include <stan/math/prim/fun/inv.hpp>
 #include <stan/math/prim/fun/inv_square.hpp>
-#include <stan/math/prim/vectorize/apply_scalar_unary.hpp>
+#include <stan/math/prim/fun/sin.hpp>
+#include <stan/math/prim/fun/square.hpp>
 #include <cmath>
 
 // Reference:
@@ -47,7 +49,7 @@ inline T trigamma_impl(const T& x) {
   double b6 = inv(42.0);
   double b8 = -inv(30.0);
 
-  // negative integers and zero return postiive infinity
+  // negative integers and zero return positive infinity
   // see http://mathworld.wolfram.com/PolygammaFunction.html
   if (x <= 0.0 && floor(x) == x) {
     value = positive_infinity();
@@ -126,7 +128,7 @@ inline double trigamma(double u) { return trigamma_impl(u); }
 inline double trigamma(int u) { return trigamma(static_cast<double>(u)); }
 
 /**
- * Structure to wrap trigamma() so it can be vectorized.
+ * Structure to wrap `trigamma()` so it can be vectorized.
  */
 struct trigamma_fun {
   /**
@@ -144,7 +146,7 @@ struct trigamma_fun {
 };
 
 /**
- * Return the elementwise application of <code>trigamma()</code> to
+ * Return the elementwise application of `trigamma()` to
  * specified argument container.  The return type promotes the
  * underlying scalar argument type to double if it is an integer,
  * and otherwise is the argument type.
