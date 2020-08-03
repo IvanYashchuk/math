@@ -7,6 +7,7 @@
 #include <stan/math/prim/functor/apply.hpp>
 #include <stan/math/prim/fun/value_of.hpp>
 #include <stan/math/prim/fun/constants.hpp>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -580,6 +581,7 @@ struct adj_jac_vari : public vari {
  * The functor supplied to adj_jac_apply must be careful to allocate any
  * variables it defines in the autodiff arena because its destructor will
  * never be called and memory will leak if allocated anywhere else.
+ * Update: with smart pointers functor's destructor will be called.
  *
  * Targs (the input argument types) can be any mix of doubles, vars, ints,
  * std::vectors with double, var, or int scalar components, or
@@ -592,7 +594,7 @@ struct adj_jac_vari : public vari {
  */
 template <typename F, typename... Targs>
 inline auto adj_jac_apply(const Targs&... args) {
-  auto vi = new adj_jac_vari<F, Targs...>();
+  auto vi = std::make_unique<adj_jac_vari<F, Targs...>>();
 
   return (*vi)(args...);
 }
