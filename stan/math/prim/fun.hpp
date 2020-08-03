@@ -296,6 +296,7 @@
 #include <stan/math/prim/fun/sqrt.hpp>
 #include <stan/math/prim/fun/square.hpp>
 #include <stan/math/prim/fun/squared_distance.hpp>
+#include <stan/math/prim/fun/stan_petsc_interface.hpp>
 #include <stan/math/prim/fun/stan_print.hpp>
 #include <stan/math/prim/fun/step.hpp>
 #include <stan/math/prim/fun/sub_col.hpp>
