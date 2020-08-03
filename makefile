@@ -14,6 +14,18 @@ help:
 -include $(HOME)/.config/stan/make.local  # user-defined variables
 -include make/local                       # user-defined variables
 
+ifndef PETSC_DIR
+$(error PETSC_DIR is not set. Please set PETSC_DIR via export PETSC_DIR=/path/to/petsc)
+endif
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+#include ${PETSC_DIR}/lib/petsc/conf/rules
+#include ${PETSC_DIR}/lib/petsc/conf/test
+
+CXXFLAGS += -I$(PETSC_DIR)/include
+LDLIBS += $(PETSC_SYS_LIB)
+TBB_CXX_TYPE=clang
+
 include make/compiler_flags               # CXX, CXXFLAGS, LDFLAGS set by the end of this file
 include make/dependencies                 # rules for generating dependencies
 include make/libraries
