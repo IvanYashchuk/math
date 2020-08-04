@@ -93,15 +93,15 @@ Vec EigenVectorToPetscVecMPI(const Eigen::Ref<const Eigen::VectorXd>& evec)
     PetscErrorCode ierr;
     Vec pvec;
 
-    PetscInt rank;
-    ierr = MPI_Comm_rank(PETSC_COMM_WORLD, &rank);CHKERRXX(ierr);
-
     PetscInt N = evec.size();  // global length
     PetscInt n = PETSC_DECIDE;  // local length
     PetscInt bs = 1;
 
     ierr = PetscSplitOwnership(PETSC_COMM_WORLD, &n, &N);CHKERRXX(ierr);
-    ierr = VecCreateMPIWithArray(PETSC_COMM_WORLD, bs, n, N, evec.data()+rank*n, &pvec);CHKERRXX(ierr);
+    ierr = VecCreateMPIWithArray(PETSC_COMM_WORLD, bs, n, N, nullptr, &pvec);CHKERRXX(ierr);
+    PetscInt local_start;
+    ierr = VecGetOwnershipRange(pvec, &local_start, nullptr);CHKERRXX(ierr);
+    ierr = VecPlaceArray(pvec, evec.data()+local_start);CHKERRXX(ierr);
     return pvec;
 }
 
