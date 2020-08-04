@@ -8,9 +8,9 @@ TEST(MathStanPetscInterface, eigen_to_petsc) {
   Eigen::VectorXd eigen_vec2 = Eigen::VectorXd::Random(6);
 
   // now transform to petsc
-  using stan::math::petsc::EigenVectorToPetscVec;
-  Vec petsc_vec1 = EigenVectorToPetscVec(eigen_vec1);
-  Vec petsc_vec2 = EigenVectorToPetscVec(eigen_vec2);
+  using stan::math::petsc::EigenVectorToPetscVecSeq;
+  Vec petsc_vec1 = EigenVectorToPetscVecSeq(eigen_vec1);
+  Vec petsc_vec2 = EigenVectorToPetscVecSeq(eigen_vec2);
 
   // Try to modify vec2, eigen array should change as well
   PetscRandom rctx;
@@ -45,8 +45,8 @@ TEST(MathStanPetscInterface, petsc_to_eigen) {
 
   // now transform to eigen
   Eigen::VectorXd eigen_vec;
-  using stan::math::petsc::PetscVecToEigenVector;
-  PetscVecToEigenVector(petsc_vec, eigen_vec);
+  using stan::math::petsc::PetscVecToEigenVectorSeq;
+  PetscVecToEigenVectorSeq(petsc_vec, eigen_vec);
 
   // check eigen_vec and petsc_vec have same values
   PetscScalar* petsc_vec_array;
