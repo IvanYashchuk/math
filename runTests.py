@@ -237,6 +237,9 @@ def main():
     except IOError:
         stan_mpi = False
 
+    if "PETSC_DIR" in os.environ:
+        stan_mpi = True
+
     # pass 0: generate all auto-generated tests
     if any(['test/prob' in arg for arg in inputs.tests]):
         generateTests(inputs.j)
