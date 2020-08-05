@@ -1,15 +1,14 @@
 #ifndef STAN_PETSC_INTERFACE_HPP
 #define STAN_PETSC_INTERFACE_HPP
 
-#define PETSC_CLANGUAGE_CXX 1
-
-#include <petscvec.h>
-#include <petscerror.h>
-
-#include <stan/math/rev/meta.hpp>
 #include <stan/math/prim/fun/Eigen.hpp>
+#include <stan/math/rev/meta.hpp>
 #include <stan/math/prim/fun/stan_petsc_interface.hpp>
 #include <tuple>
+
+#define PETSC_CLANGUAGE_CXX 1
+#include <petscvec.h>
+#include <petscerror.h>
 
 namespace stan {
 namespace math {

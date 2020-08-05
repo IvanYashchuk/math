@@ -1,13 +1,13 @@
 #ifndef STAN_PETSC_INTERFACE_HPP
 #define STAN_PETSC_INTERFACE_HPP
 
-#define PETSC_CLANGUAGE_CXX 1
-
-#include <petscvec.h>
-#include <petscerror.h>
-
+#include <stan/math/prim/meta.hpp>
 #include <stan/math/prim/fun/Eigen.hpp>
 #include <tuple>
+
+#define PETSC_CLANGUAGE_CXX 1
+#include <petscvec.h>
+#include <petscerror.h>
 
 namespace stan {
 namespace math {
@@ -20,7 +20,7 @@ namespace petsc {
  * @param pvec Vec input vector to be transformed to Eigen
  * @param evec Eigen::VectorXd& reference to Eigen representation of PETSc Vec
  */
-void PetscVecToEigenVectorSeq(const Vec& pvec, Eigen::VectorXd& evec)
+inline void PetscVecToEigenVectorSeq(const Vec& pvec, Eigen::VectorXd& evec)
 {
     PetscErrorCode ierr;
     PetscScalar *pdata;
@@ -46,7 +46,7 @@ void PetscVecToEigenVectorSeq(const Vec& pvec, Eigen::VectorXd& evec)
  * @param pvec Vec input vector to be transformed to Eigen
  * @param evec Eigen::VectorXd& reference to Eigen representation of PETSc Vec
  */
-void PetscVecToEigenVectorMPI(const Vec& pvec, Eigen::VectorXd& evec)
+inline void PetscVecToEigenVectorMPI(const Vec& pvec, Eigen::VectorXd& evec)
 {
     PetscErrorCode ierr;
 
@@ -72,7 +72,7 @@ void PetscVecToEigenVectorMPI(const Vec& pvec, Eigen::VectorXd& evec)
  * @param evec Eigen::Ref<Eigen::VectorXd> reference to Eigen Vector to be transformed into PETSc Vec
  * @return Vec parallel PETSc Vec representation of input Eigen Vector
  */
-Vec EigenVectorToPetscVecSeq(const Eigen::Ref<const Eigen::VectorXd>& evec)
+inline Vec EigenVectorToPetscVecSeq(const Eigen::Ref<const Eigen::VectorXd>& evec)
 {
     PetscErrorCode ierr;
     Vec pvec;
@@ -87,7 +87,7 @@ Vec EigenVectorToPetscVecSeq(const Eigen::Ref<const Eigen::VectorXd>& evec)
  * @param evec Eigen::Ref<Eigen::VectorXd> reference to Eigen Vector to be transformed into PETSc Vec
  * @return Vec parallel PETSc Vec representation of input Eigen Vector
  */
-Vec EigenVectorToPetscVecMPI(const Eigen::Ref<const Eigen::VectorXd>& evec)
+inline Vec EigenVectorToPetscVecMPI(const Eigen::Ref<const Eigen::VectorXd>& evec)
 {
     PetscErrorCode ierr;
     Vec pvec;
