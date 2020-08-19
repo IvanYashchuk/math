@@ -1,5 +1,5 @@
-#ifndef STAN_PETSC_INTERFACE_HPP
-#define STAN_PETSC_INTERFACE_HPP
+#ifndef STAN_MATH_PETSC_FUNCTOR_HPP
+#define STAN_MATH_PETSC_FUNCTOR_HPP
 
 #include <stan/math/prim/fun/Eigen.hpp>
 #include <stan/math/rev/meta.hpp>
