@@ -16,13 +16,13 @@ namespace math {
 namespace petsc {
 
 template <class ExternalSolver>
-class petsc_functor {
+class petsc_scalar_functor {
     int N_;
     double* x_mem_;  // Holds the input vector
     ExternalSolver solver_;
 
 public:
-    petsc_functor() : N_(0), x_mem_(nullptr), solver_(PETSC_COMM_WORLD) {}
+    petsc_scalar_functor() : N_(0), x_mem_(nullptr), solver_(PETSC_COMM_WORLD) {}
 
     /**
      * Call the PETSc function for the input vector
